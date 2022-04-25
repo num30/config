@@ -1,0 +1,4 @@
+app:
+  fromConfig: "valFromConf"
+  overriddenByEvnVar: "SHOULD_NOT_APPEAR"
+  overriddenByArg: "SHOULD_NOT_APPEAR"
