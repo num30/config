@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"os"
 	"reflect"
 	"testing"
@@ -28,22 +29,24 @@ func Test_ConfigReader(t *testing.T) {
 	// arrange
 	valFromVar := "valFromVar"
 	overridenVar := "overridenVar"
-	overrFromArgVal := "overrFromArgValue"
+	fromArgVal := "fromArgValue"
 
 	nc := &fullConfig{}
 	confReader := NewConfMgr("myapp.yaml")
 	confReader.ConfigPaths = []string{"testdata"}
-	cmd := newTestRootCommand(confReader, nc)
 
-	cmd.SetArgs([]string{"get", "--" + bindedFlag, "10", "--verbose", "true", "--conf.overriddenByArg", overrFromArgVal})
+	os.Args = []string{"get", "--" + bindedFlag, "10", "--verbose", "true", "--fromArg", fromArgVal}
+
 	os.Setenv("MYAPP_CONF_FROMENVVAR", valFromVar)
 	defer os.Unsetenv("MYAPP_CONF_FROMENVVAR")
 
 	os.Setenv("MYAPP_CONF_OVERRIDDENBYEVNVAR", overridenVar)
 	defer os.Unsetenv("MYAPP_CONF_OVERRIDDENBYEVNVAR")
 
+	flag.Set("fromArg", "ValFromArg")
+
 	// act
-	err := confReader.ReadConfig(cmd.Flags(), nc)
+	err := confReader.ReadConfig(nc)
 
 	// assert
 	if assert.NoError(t, err) {
@@ -51,7 +54,7 @@ func Test_ConfigReader(t *testing.T) {
 		assert.Equal(t, true, nc.GlobalConfig.Verbose)
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, valFromVar, nc.App.FromEnvVar)
-		assert.Equal(t, overrFromArgVal, nc.App.OverriddenByArg)
+		assert.Equal(t, fromArgVal, nc.App.OverriddenByArg)
 	}
 }
 
@@ -59,7 +62,7 @@ func Test_ReadFromFile(t *testing.T) {
 	nc := &fullConfig{}
 	confReader := NewConfMgr("myapp.yaml")
 	confReader.ConfigPaths = []string{"testdata"}
-	err := confReader.ReadConfig(nil, nc)
+	err := confReader.ReadConfig(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, true, nc.Verbose)
@@ -70,7 +73,7 @@ func Test_ReadFromJsonFile(t *testing.T) {
 	nc := &fullConfig{}
 	confReader := NewConfMgr("myappjson")
 	confReader.ConfigPaths = []string{"testdata"}
-	err := confReader.ReadConfig(nil, nc)
+	err := confReader.ReadConfig(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, true, nc.Verbose)
@@ -93,7 +96,7 @@ func subCommand(confReader ConfigReader, actualConf *fullConfig) *cobra.Command 
 	getCmd := cobra.Command{
 		Use: "get",
 		Run: func(cmd *cobra.Command, args []string) {
-			confReader.ReadConfig(cmd.Flags(), actualConf)
+			confReader.ReadConfig(actualConf)
 		},
 	}
 
@@ -110,7 +113,7 @@ type dmParent struct {
 	GlobalConfig `mapstructure:",squash"`
 	Conf         dmSibling `flag:"notAllowed"`
 	PtrConf      *dmSibling
-	Par          int `flag:"par"`
+	Par          float64 `flag:"par"`
 }
 
 type dmSibling struct {
@@ -119,11 +122,16 @@ type dmSibling struct {
 }
 
 func TestDumpStrunct(t *testing.T) {
-	m := map[string]string{}
+	m := map[string]*flagInfo{}
 	c := &ConfMgr{}
 	c.dumpStruct(reflect.TypeOf(dmParent{}), "", m)
 
-	assert.Equal(t, "id", m["conf.id"])
-	assert.Equal(t, "id", m["ptrconf.id"])
-	assert.Equal(t, "par", m["par"])
+	assert.Equal(t, "id", m["conf.id"].Name)
+	assert.Equal(t, "string", m["conf.id"].Type.String())
+
+	assert.Equal(t, "id", m["ptrconf.id"].Name)
+	assert.Equal(t, "string", m["ptrconf.id"].Type.String())
+
+	assert.Equal(t, "par", m["par"].Name)
+	assert.Equal(t, "float64", m["par"].Type.String())
 }
