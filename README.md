@@ -87,6 +87,10 @@ type Config struct {
 ```
 You can set the flag by calling `myapp --debug`
 
-## Credits :clap:
+
+##  :clap: Contributing
+We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
+
+## :star: Credits
 This package is based [Vipeer](https://github.com/spf13/viper)
 Special thanks to [enviper](https://github.com/iamolegga/enviper) for making environment variables work with viper.
