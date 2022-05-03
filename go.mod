@@ -5,10 +5,9 @@ go 1.18
 require (
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/iamolegga/enviper v1.4.0
-	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.4.0
+
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
