@@ -104,7 +104,7 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 	err = validator.New().Struct(configStruct)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		if validationErrors != nil && len(validationErrors) > 0 {
+		if len(validationErrors) > 0 {
 			c.log("Config validation errors: '%+v'", validationErrors)
 			if err != nil {
 				return errors.Wrap(err, "validation error")

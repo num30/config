@@ -139,3 +139,30 @@ func Test_DumpStruct(t *testing.T) {
 	}
 
 }
+
+type ValidationConfig struct {
+	Host string `validate:"required"`
+}
+
+func Test_Validation(t *testing.T) {
+	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	cf := &ValidationConfig{}
+	reader := NewConfReader("myapp")
+
+	t.Run("fails", func(t *testing.T) {
+		err := reader.Read(cf)
+		if assert.Error(t, err) {
+			assert.Equal(t, "validation error: Key: 'ValidationConfig.Host' Error:Field validation for 'Host' failed on the 'required' tag", err.Error())
+		}
+	})
+
+	t.Run("passes", func(t *testing.T) {
+		os.Setenv("MYAPP_HOST", "localhost")
+		defer os.Unsetenv("MYAPP_HOST")
+		err := reader.Read(cf)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "localhost", cf.Host)
+		}
+	})
+
+}

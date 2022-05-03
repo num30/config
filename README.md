@@ -92,6 +92,16 @@ type Config struct {
 You can set the flag by calling `myapp --debug`
 
 
+## :cop: Validations
+You can validate fields of you configuration struct by using `validate` tag. For example:
+
+``` go
+type Config struct {		
+    Host           string `validate:"required"`
+}
+```
+If validation fails `ConfReader.Read` will return an error. 
+
 ##  :clap: Contributing
 We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
 

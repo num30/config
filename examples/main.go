@@ -17,7 +17,7 @@ type MyConfig struct {
 
 type FooConfig struct {
 	Name               string
-	ValueFromFile      int
+	ValueFromFile      int `validation:gt`
 	DurationFromEnvVar time.Duration
 	NestedFlag         string `flag:"nested"`
 }
