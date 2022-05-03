@@ -2,7 +2,7 @@
 [![test-and-lint](https://github.com/num30/config/actions/workflows/test-and-lint.yaml/badge.svg)](https://github.com/num30/config/actions/workflows/test-and-lint.yaml)
 [![codecov](https://codecov.io/gh/num30/config/branch/main/graph/badge.svg?token=YBOM7T2YUK)](https://codecov.io/gh/num30/config)
 [![Go Report Card](https://goreportcard.com/badge/github.com/num30/config)](https://goreportcard.com/report/github.com/num30/config)
-[![Go Reference](https://pkg.go.dev/badge/godoc.org/github.com/num30/config.svg)](https://pkg.go.dev/godoc.org/github.com/num30/config)
+[![Go Reference](https://pkg.go.dev/badge/github.com/num30/config.svg)](https://pkg.go.dev/github.com/num30/config)
 
 `config` is a package that supports reading configuration into a struct from files, environment variable and command line arguments.
 All you need is to declare a config structure and call `Read` method.
@@ -47,13 +47,13 @@ db:
 
 Execute  `go run examples/main.go` to run the example. 
 
-## :shipit: Install 
-
+### :package: Install 
 ``` go
 go get github.com/num30/config  
 ```
 
-## :construction_worker: How To Set Configuration Values 
+##  :construction_worker: Setting Configuration Values 
+
 ### :memo: Config File
 #### Name
 `ConfReader` will use config name property to search for a config file with that name.
