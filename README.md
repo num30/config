@@ -47,14 +47,14 @@ db:
 
 Execute  `go run examples/main.go` to run the example. 
 
-## Install :shipit:
+## :shipit: Install 
 
 ``` go
 go get github.com/num30/config  
 ```
 
-## How To Set Configuration Values :construction_worker: 
-### Config File  :memo:
+## :construction_worker: How To Set Configuration Values 
+### :memo: Config File
 #### Name
 `ConfReader` will use config name property to search for a config file with that name.
 
@@ -73,14 +73,14 @@ db:
 
 Config file type could be any type supported by  [viper](https://github.com/spf13/viper#reading-config-files): JSON, TOML, YAML, HCL, INI, envfile and Java Properties files.
 
-### Environment Variables :package:
+### :package: Environment Variables
 
 To set a flag via environment variable, make all letters uppercase and replace '.' with '_' in path. For example: app.Server.Port -> APP_SERVER_PORT
 
 Environment variables are prefixed with `config name` by default. For example `NewConfReader("myconf")` will search for environment variables like `MYCONF_DB_HOST` 
 This behavior could be overridden by setting `NewConfReader("myconf").WithoutPrefix()`
 
-### Command Line Arguments :computer:
+### :computer: Command Line Arguments 
 
 To set a configuration field via command line argument you need to pass and argument prefixes wiht `--` and lowercase field name with path. Like `--db.host=localhost`
 Boolean value could be set by passing only flag name like `--verbose`
