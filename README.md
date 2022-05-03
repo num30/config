@@ -29,19 +29,14 @@ func main() {
     }
 }
 ```
-If you want to change the DB Host of your applications the you can do any of the following:
-1. creating config file in json, yaml, toml.For example myconf.yaml
+When you want to change, for example, DB Host of your applications you can do any of the following:
+1. create config `myconf.yaml` file in home directory 
 ``` 
 db:
    host: "localhost"
 ```
-2. setting environment variables. Like `DB_HOST=localhost`
-3. setting command line arguments. Like `--db_host=localhost`
-
-`ConfReader` merges values from all three sources in the following order:
-1. File
-2. Environment variables
-3. Command line arguments
+2. set environment variable. Like `DB_HOST=localhost`
+3. set command line argument. Like `--db.host=localhost`
 
 :information_source: Refer to the [example](/examples/main.go) that illustrates how to use `ConfReader`. 
 
@@ -53,6 +48,14 @@ go get github.com/num30/config
 ```
 
 ## Setting Configuration Values :construction_worker:
+
+`ConfReader` merges values from all three sources in the following order:
+1. File
+2. Environment variables
+3. Command line arguments
+
+Setting same key in file will be overridden by environment variable and command line argument has the highest priority. 
+However, you can set one key in file and other in env vars or command line args. Those will be merged. 
 
 ### Config File :memo:
 #### Name
