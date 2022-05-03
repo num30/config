@@ -27,7 +27,9 @@ type LocalConfig struct {
 }
 
 func Test_ConfigReader(t *testing.T) {
+
 	// arrange
+	resetFlags()
 	valFromVar := "valFromVar"
 	overridenVar := "overridenVar"
 	fromArgVal := "fromArgValue"
@@ -59,8 +61,14 @@ func Test_ConfigReader(t *testing.T) {
 	}
 }
 
-func Test_ReadFromFile(t *testing.T) {
+// flags are static so we have to reset them before each test
+func resetFlags() {
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	os.Args = []string{"app"}
+}
+
+func Test_ReadFromFile(t *testing.T) {
+	resetFlags()
 	nc := &FullConfig{}
 	confReader := NewConfReader("myapp").WithSearchDirs("testdata")
 
@@ -72,7 +80,7 @@ func Test_ReadFromFile(t *testing.T) {
 }
 
 func Test_EnvVarsNoPrefix(t *testing.T) {
-	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	resetFlags()
 	nc := &FullConfig{}
 	confReader := NewConfReader("myapp").WithoutPrefix()
 	os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
@@ -84,7 +92,7 @@ func Test_EnvVarsNoPrefix(t *testing.T) {
 }
 
 func Test_ReadFromJsonFile(t *testing.T) {
-	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+	resetFlags()
 	nc := &FullConfig{}
 	confReader := NewConfReader("myappjson")
 	confReader.ConfigDirs = []string{"testdata"}
@@ -145,11 +153,12 @@ type ValidationConfig struct {
 }
 
 func Test_Validation(t *testing.T) {
-	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+
 	cf := &ValidationConfig{}
 	reader := NewConfReader("myapp")
 
 	t.Run("fails", func(t *testing.T) {
+		resetFlags()
 		err := reader.Read(cf)
 		if assert.Error(t, err) {
 			assert.Equal(t, "validation error: Key: 'ValidationConfig.Host' Error:Field validation for 'Host' failed on the 'required' tag", err.Error())
@@ -157,6 +166,7 @@ func Test_Validation(t *testing.T) {
 	})
 
 	t.Run("passes", func(t *testing.T) {
+		resetFlags()
 		os.Setenv("MYAPP_HOST", "localhost")
 		defer os.Unsetenv("MYAPP_HOST")
 		err := reader.Read(cf)
