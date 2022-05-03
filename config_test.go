@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"testing"
@@ -59,9 +60,10 @@ func Test_ConfigReader(t *testing.T) {
 }
 
 func Test_ReadFromFile(t *testing.T) {
+	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	nc := &FullConfig{}
-	confReader := NewConfReader("myapp")
-	confReader.ConfigDirs = []string{"testdata"}
+	confReader := NewConfReader("myapp").WithSearchDirs("testdata")
+
 	err := confReader.Read(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
@@ -70,6 +72,7 @@ func Test_ReadFromFile(t *testing.T) {
 }
 
 func Test_EnvVarsNoPrefix(t *testing.T) {
+	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	nc := &FullConfig{}
 	confReader := NewConfReader("myapp").WithoutPrefix()
 	os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
@@ -81,6 +84,7 @@ func Test_EnvVarsNoPrefix(t *testing.T) {
 }
 
 func Test_ReadFromJsonFile(t *testing.T) {
+	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	nc := &FullConfig{}
 	confReader := NewConfReader("myappjson")
 	confReader.ConfigDirs = []string{"testdata"}
@@ -104,7 +108,7 @@ type dmSibling struct {
 	FromEnvVar string
 }
 
-func TestDumpStrunct(t *testing.T) {
+func Test_DumpStruct(t *testing.T) {
 	m := map[string]*flagInfo{}
 	c := &ConfReader{}
 	c.dumpStruct(reflect.TypeOf(dmParent{}), "", m)

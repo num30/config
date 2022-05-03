@@ -126,6 +126,7 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 		switch v.Type.String() {
 		case "string":
 			pflag.StringP(v.Name, "", "", "")
+
 		case "bool":
 			pflag.BoolP(v.Name, "", false, "")
 
