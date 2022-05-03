@@ -16,8 +16,8 @@ type MyConfig struct {
 }
 
 type FooConfig struct {
-	Name               string
-	ValueFromFile      int `validation:gt`
+	Name               string `validate:"required"`
+	ValueFromFile      int
 	DurationFromEnvVar time.Duration
 	NestedFlag         string `flag:"nested"`
 }
@@ -39,7 +39,7 @@ func main() {
 	os.Args = append(os.Args, "--debug", "")
 
 	// Run
-	cfgReader := config.NewConfReader("myconf").WithLog(os.Stdout)
+	cfgReader := config.NewConfReader("myconf").WithLog(os.Stdout).WithSearchDirs("./examples", ".")
 
 	conf := MyConfig{}
 	err := cfgReader.Read(&conf)

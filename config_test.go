@@ -145,7 +145,6 @@ func Test_DumpStruct(t *testing.T) {
 		assert.Equal(t, "duration", m["duration"].Name)
 		assert.Equal(t, "time.Duration", m["duration"].Type.String())
 	}
-
 }
 
 type ValidationConfig struct {

@@ -1,7 +1,8 @@
 # Declarative configuration for Go  :rocket:
 [![test-and-lint](https://github.com/num30/config/actions/workflows/test-and-lint.yaml/badge.svg)](https://github.com/num30/config/actions/workflows/test-and-lint.yaml)
 [![codecov](https://codecov.io/gh/num30/config/branch/main/graph/badge.svg?token=YBOM7T2YUK)](https://codecov.io/gh/num30/config)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/num30/config)](https://goreportcard.com/report/github.com/num30/config)
+[![Go Reference](https://pkg.go.dev/badge/godoc.org/github.com/num30/config.svg)](https://pkg.go.dev/godoc.org/github.com/num30/config)
 
 `config` is a package that supports reading configuration into a struct from files, environment variable and command line arguments.
 All you need is to declare a config structure and call `Read` method.
@@ -42,7 +43,9 @@ db:
 2. Environment variables
 3. Command line arguments
 
-:information_source: Refer to the [example](/examples/main.go) that illustrates how to use `ConfReader`.
+:information_source: Refer to the [example](/examples/main.go) that illustrates how to use `ConfReader`. 
+
+Execute  `go run examples/main.go` to run the example. 
 
 ## Install :shipit:
 
