@@ -47,14 +47,14 @@ db:
 
 Execute  `go run examples/main.go` to run the example. 
 
-### :package: Install 
+### Install :package:
 ``` go
 go get github.com/num30/config  
 ```
 
-##  :construction_worker: Setting Configuration Values 
+## Setting Configuration Values :construction_worker:
 
-### :memo: Config File
+### Config File :memo:
 #### Name
 `ConfReader` will use config name property to search for a config file with that name.
 
@@ -73,14 +73,14 @@ db:
 
 Config file type could be any type supported by  [viper](https://github.com/spf13/viper#reading-config-files): JSON, TOML, YAML, HCL, INI, envfile and Java Properties files.
 
-### :package: Environment Variables
+### Environment Variables :package:
 
 To set a flag via environment variable, make all letters uppercase and replace '.' with '_' in path. For example: app.Server.Port -> APP_SERVER_PORT
 
 Environment variables are prefixed with `config name` by default. For example `NewConfReader("myconf")` will search for environment variables like `MYCONF_DB_HOST` 
 This behavior could be overridden by setting `NewConfReader("myconf").WithoutPrefix()`
 
-### :computer: Command Line Arguments 
+### Command Line Arguments :computer: 
 
 To set a configuration field via command line argument you need to pass and argument prefixes wiht `--` and lowercase field name with path. Like `--db.host=localhost`
 Boolean value could be set by passing only flag name like `--verbose`
@@ -95,7 +95,7 @@ type Config struct {
 You can set the flag by calling `myapp --debug`
 
 
-## :cop: Validations
+## Validations :underage:
 You can validate fields of you configuration struct by using `validate` tag. For example:
 
 ``` go
@@ -105,9 +105,9 @@ type Config struct {
 ```
 If validation fails `ConfReader.Read` will return an error. 
 
-##  :clap: Contributing
+##  Contributing :clap:
 We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
 
-## :star: Credits
+## Credits :star:
 This package is based [Vipeer](https://github.com/spf13/viper)
 Special thanks to [enviper](https://github.com/iamolegga/enviper) for making environment variables work with viper.
