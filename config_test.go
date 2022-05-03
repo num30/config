@@ -5,14 +5,14 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
 const bindedFlag = "id"
 
-type fullConfig struct {
+type FullConfig struct {
 	GlobalConfig `mapstructure:",squash"`
 	App          LocalConfig
 }
@@ -31,22 +31,22 @@ func Test_ConfigReader(t *testing.T) {
 	overridenVar := "overridenVar"
 	fromArgVal := "fromArgValue"
 
-	nc := &fullConfig{}
-	confReader := NewConfMgr("myapp.yaml")
-	confReader.ConfigPaths = []string{"testdata"}
+	nc := &FullConfig{}
+	confReader := NewConfReader("myapp").WithLog(os.Stdout)
+	confReader.ConfigDirs = []string{"testdata"}
 
-	os.Args = []string{"get", "--" + bindedFlag, "10", "--verbose", "true", "--fromArg", fromArgVal}
+	os.Args = []string{"get", "--" + bindedFlag, "10", "--verbose", "--app.overriddenbyarg", fromArgVal}
 
-	os.Setenv("MYAPP_CONF_FROMENVVAR", valFromVar)
-	defer os.Unsetenv("MYAPP_CONF_FROMENVVAR")
+	os.Setenv("MYAPP_APP_FROMENVVAR", valFromVar)
+	defer os.Unsetenv("MYAPP_APP_FROMENVVAR")
 
-	os.Setenv("MYAPP_CONF_OVERRIDDENBYEVNVAR", overridenVar)
-	defer os.Unsetenv("MYAPP_CONF_OVERRIDDENBYEVNVAR")
+	os.Setenv("MYAPP_APP_OVERRIDDENBYEVNVAR", overridenVar)
+	defer os.Unsetenv("MYAPP_APP_OVERRIDDENBYEVNVAR")
 
 	flag.Set("fromArg", "ValFromArg")
 
 	// act
-	err := confReader.ReadConfig(nc)
+	err := confReader.Read(nc)
 
 	// assert
 	if assert.NoError(t, err) {
@@ -59,54 +59,36 @@ func Test_ConfigReader(t *testing.T) {
 }
 
 func Test_ReadFromFile(t *testing.T) {
-	nc := &fullConfig{}
-	confReader := NewConfMgr("myapp.yaml")
-	confReader.ConfigPaths = []string{"testdata"}
-	err := confReader.ReadConfig(nc)
+	nc := &FullConfig{}
+	confReader := NewConfReader("myapp")
+	confReader.ConfigDirs = []string{"testdata"}
+	err := confReader.Read(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, true, nc.Verbose)
+	}
+}
+
+func Test_EnvVarsNoPrefix(t *testing.T) {
+	nc := &FullConfig{}
+	confReader := NewConfReader("myapp").WithoutPrefix()
+	os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
+
+	err := confReader.Read(nc)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "valFromEnvVar", nc.App.FromEnvVar)
 	}
 }
 
 func Test_ReadFromJsonFile(t *testing.T) {
-	nc := &fullConfig{}
-	confReader := NewConfMgr("myappjson")
-	confReader.ConfigPaths = []string{"testdata"}
-	err := confReader.ReadConfig(nc)
+	nc := &FullConfig{}
+	confReader := NewConfReader("myappjson")
+	confReader.ConfigDirs = []string{"testdata"}
+	err := confReader.Read(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, true, nc.Verbose)
 	}
-}
-
-func newTestRootCommand(confReader ConfigReader, actualConf *fullConfig) *cobra.Command {
-	nodeCmd := &cobra.Command{
-		Use:   "node",
-		Short: "Access node",
-	}
-	nodeCmd.PersistentFlags().Bool("verbose", false, "verbose")
-
-	nodeCmd.AddCommand(subCommand(confReader, actualConf))
-	return nodeCmd
-}
-
-// getCmd represents the get command
-func subCommand(confReader ConfigReader, actualConf *fullConfig) *cobra.Command {
-	getCmd := cobra.Command{
-		Use: "get",
-		Run: func(cmd *cobra.Command, args []string) {
-			confReader.ReadConfig(actualConf)
-		},
-	}
-
-	getCmd.Flags().StringP(bindedFlag, "i", "", "id")
-	//confReader.BindFlag("conf.id", getCmd.Flags().Lookup(bindedFlag))
-
-	getCmd.Flags().StringP("node.cert", "c", "", "")
-	getCmd.Flags().String("conf.overriddenByArg", "", "")
-
-	return &getCmd
 }
 
 type dmParent struct {
@@ -114,6 +96,7 @@ type dmParent struct {
 	Conf         dmSibling `flag:"notAllowed"`
 	PtrConf      *dmSibling
 	Par          float64 `flag:"par"`
+	Duration     time.Duration
 }
 
 type dmSibling struct {
@@ -123,15 +106,32 @@ type dmSibling struct {
 
 func TestDumpStrunct(t *testing.T) {
 	m := map[string]*flagInfo{}
-	c := &ConfMgr{}
+	c := &ConfReader{}
 	c.dumpStruct(reflect.TypeOf(dmParent{}), "", m)
 
-	assert.Equal(t, "id", m["conf.id"].Name)
-	assert.Equal(t, "string", m["conf.id"].Type.String())
+	if assert.NotNil(t, m["verbose"]) {
+		assert.Equal(t, "verbose", m["verbose"].Name)
+		assert.Equal(t, "bool", m["verbose"].Type.String())
+	}
 
-	assert.Equal(t, "id", m["ptrconf.id"].Name)
-	assert.Equal(t, "string", m["ptrconf.id"].Type.String())
+	if assert.NotNil(t, m["conf.id"]) {
+		assert.Equal(t, "id", m["conf.id"].Name)
+		assert.Equal(t, "string", m["conf.id"].Type.String())
+	}
 
-	assert.Equal(t, "par", m["par"].Name)
-	assert.Equal(t, "float64", m["par"].Type.String())
+	if assert.NotNil(t, m["ptrconf.id"]) {
+		assert.Equal(t, "id", m["ptrconf.id"].Name)
+		assert.Equal(t, "string", m["ptrconf.id"].Type.String())
+	}
+
+	if assert.NotNil(t, m["par"]) {
+		assert.Equal(t, "par", m["par"].Name)
+		assert.Equal(t, "float64", m["par"].Type.String())
+	}
+
+	if assert.NotNil(t, m["duration"]) {
+		assert.Equal(t, "duration", m["duration"].Name)
+		assert.Equal(t, "time.Duration", m["duration"].Type.String())
+	}
+
 }
