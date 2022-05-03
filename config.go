@@ -16,14 +16,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-type GlobalConfig struct {
-	Verbose bool
-}
+/* ConfReader reads configuration from config file, environment variables or command line flags.
+ Flags have precedence over env vars and env vars have precedence over config file.
 
-/* ConfReader read configuration from config file, env vars or flags.
- Flags have precedence over env vars and evn vars have precedence over config file.
- Flags mapped to config struct filed automatically if their name includes path to field.
- For example:
+
+For example:
 	type NestedConf struct {
 		Foo string
 	}
@@ -48,8 +45,7 @@ type ConfReader struct {
 }
 
 // NewConfReader creates new instance of ConfReader
-// configName is name of config file name without extension and evn vars prefix
-
+// configName is a name of config file name without extension and evn vars prefix
 func NewConfReader(configName string) *ConfReader {
 	return &ConfReader{
 		viper:        enviper.New(viper.New()),
