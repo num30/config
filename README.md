@@ -112,5 +112,5 @@ If validation fails `ConfReader.Read` will return an error.
 We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
 
 ## Credits :star:
-This package is based [Vipeer](https://github.com/spf13/viper)
+This package is based [Viper](https://github.com/spf13/viper)
 Special thanks to [enviper](https://github.com/iamolegga/enviper) for making environment variables work with viper.
