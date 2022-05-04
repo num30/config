@@ -2,18 +2,18 @@ package config
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"reflect"
-	"strings"
-
+	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamolegga/enviper"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"io"
+	"log"
+	"os"
+	"reflect"
+	"strings"
 )
 
 /* ConfReader reads configuration from config file, environment variables or command line flags.
@@ -55,14 +55,19 @@ func NewConfReader(configName string) *ConfReader {
 	}
 }
 
-// Read reads config from config file, env vars or flags. In case of error fails with os.Exit(1)
+// Read reads config from config file, env vars or flags.
 func (c *ConfReader) Read(configStruct interface{}) error {
 	if configStruct == nil {
 		return errors.New("config struct is nil")
 	}
 
-	jww.SetLogThreshold(jww.LevelTrace)
-	jww.SetStdoutThreshold(jww.LevelTrace)
+	// set default values
+	if err := defaults.Set(configStruct); err != nil {
+		return errors.Wrap(err, "failed to set default values")
+	}
+
+	//jww.SetLogThreshold(jww.LevelTrace)
+	//jww.SetStdoutThreshold(jww.LevelTrace)
 
 	c.viper.SetConfigFile(c.configName)
 
@@ -83,9 +88,6 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 	c.viper.SetConfigName(c.configName)
 	c.viper.SetEnvPrefix(c.EnvVarPrefix)
 
-	// read in environment variables that match
-	c.viper.AutomaticEnv()
-
 	// Bind flags
 	if err := c.flagsBinding(configStruct); err != nil {
 		return err
@@ -97,6 +99,7 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 		return errors.Wrap(err, "failed to unmarshal struct")
 	}
 
+	// validate struct
 	err = validator.New().Struct(configStruct)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
@@ -118,61 +121,61 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	m := map[string]*flagInfo{}
 	c.dumpStruct(t, "", m)
 
+	var flags = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
+
 	for _, v := range m {
 		switch v.Type.String() {
 		case "string":
-			pflag.StringP(v.Name, "", "", "")
+			flags.String(v.Name, v.DefaultVal, "")
 
 		case "bool":
-			pflag.BoolP(v.Name, "", false, "")
-
+			flags.Bool(v.Name, false, "")
 		case "float32":
-			pflag.Float32(v.Name, 0, "")
+			flags.Float32(v.Name, 0, "")
 
 		case "float64":
-			pflag.Float64P(v.Name, "", 0, "")
-
-		case "float":
-			pflag.Float64P(v.Name, "", 0, "")
+			flags.Float64(v.Name, 0, "")
 
 		case "time.Duration":
-			pflag.DurationP(v.Name, "", 0, "")
+			flags.Duration(v.Name, 0, "")
 
 		case "int":
-			pflag.IntP(v.Name, "", 0, "")
+		case "int32":
+			flags.Int(v.Name, 0, "")
 
 		case "uint":
-			pflag.Uint(v.Name, 0, "")
-
 		case "uint32":
-			pflag.Uint32(v.Name, 0, "")
+			flags.Uint(v.Name, 0, "")
 
 		case "uint64":
-			pflag.Uint64(v.Name, 0, "")
+			flags.Uint64P(v.Name, "", 0, "")
 
 		case "uint8":
-			pflag.Uint8(v.Name, 0, "")
+			flags.Uint8(v.Name, 0, "")
 
-		case "int32":
-			pflag.Int32(v.Name, 0, "")
 			// TODO: add more types
 		}
 	}
 
+	err := flags.Parse(os.Args[1:])
+	if err != nil {
+		return errors.Wrap(err, "failed to parse flags")
+	}
 	for k, v := range m {
-		err := c.BindFlag(k, pflag.Lookup(v.Name))
-		if err != nil {
-			return errors.Wrap(err, "failed to bind flag "+v.Name)
+		f := flags.Lookup(v.Name)
+		if f != nil && f.Changed {
+			c.viper.Set(k, f.Value)
 		}
+
 	}
 
-	pflag.Parse()
 	return nil
 }
 
 type flagInfo struct {
-	Name string
-	Type reflect.Type
+	Name       string
+	Type       reflect.Type
+	DefaultVal string
 }
 
 func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*flagInfo) {
@@ -195,13 +198,15 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 				fieldPath := strings.TrimPrefix(strings.ToLower(path+"."+f.Name), ".")
 				if val != "" {
 					res[fieldPath] = &flagInfo{
-						Name: val,
-						Type: f.Type,
+						Name:       val,
+						Type:       f.Type,
+						DefaultVal: f.Tag.Get("default"),
 					}
 				} else {
 					res[fieldPath] = &flagInfo{
-						Name: fieldPath,
-						Type: f.Type,
+						Name:       fieldPath,
+						Type:       f.Type,
+						DefaultVal: f.Tag.Get("default"),
 					}
 				}
 

@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"github.com/num30/config/lib"
 	"github.com/spf13/pflag"
 	"os"
 	"reflect"
@@ -11,7 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const bindedFlag = "id"
+type GlobalConfig struct {
+	Verbose bool
+}
 
 type FullConfig struct {
 	GlobalConfig `mapstructure:",squash"`
@@ -38,7 +41,7 @@ func Test_ConfigReader(t *testing.T) {
 	confReader := NewConfReader("myapp").WithLog(os.Stdout)
 	confReader.ConfigDirs = []string{"testdata"}
 
-	os.Args = []string{"get", "--" + bindedFlag, "10", "--verbose", "--app.overriddenbyarg", fromArgVal}
+	os.Args = []string{"get", "--id", "10", "--verbose", "--app.overriddenbyarg", fromArgVal}
 
 	os.Setenv("MYAPP_APP_FROMENVVAR", valFromVar)
 	defer os.Unsetenv("MYAPP_APP_FROMENVVAR")
@@ -174,4 +177,20 @@ func Test_Validation(t *testing.T) {
 		}
 	})
 
+}
+
+type DefaultVals struct {
+	DB   lib.PostgresqlDb
+	Test string `default:"test"`
+}
+
+func Test_DefaultFalse(t *testing.T) {
+	resetFlags()
+	cf := &DefaultVals{}
+	reader := NewConfReader("def-vals")
+	err := reader.Read(cf)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "localhost", cf.DB.Host)
+		assert.Equal(t, "test", cf.Test)
+	}
 }

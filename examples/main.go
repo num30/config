@@ -13,6 +13,7 @@ type MyConfig struct {
 	GlobalConfig `mapstructure:",squash"`
 	Debug        bool
 	Foo          FooConfig
+	DefaultVal   string `default:"default value"`
 }
 
 type FooConfig struct {

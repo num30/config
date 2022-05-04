@@ -4,14 +4,14 @@ package lib
 
 import "fmt"
 
-// PostgresDb default configuration for Postgres database connection
+// PostgresqlDb is a default configuration for Postgres database connection
 type PostgresqlDb struct {
-	Host       string
-	Password   string
-	DbName     string
-	Username   string
-	Port       int
-	SslEnabled bool
+	Host       string `default:"localhost"`
+	Password   string `default:"pass"`
+	DbName     string `default:"postgres"`
+	Username   string `default:"postgres"`
+	Port       int    `default:"5432"`
+	SslEnabled bool   `default:"false"`
 }
 
 func (p *PostgresqlDb) GetConnString() string {
