@@ -38,8 +38,7 @@ func Test_ConfigReader(t *testing.T) {
 	fromArgVal := "fromArgValue"
 
 	nc := &FullConfig{}
-	confReader := NewConfReader("myapp").WithLog(os.Stdout)
-	confReader.ConfigDirs = []string{"testdata"}
+	confReader := NewConfReader("myapp").WithSearchDirs("testdata")
 
 	os.Args = []string{"get", "--id", "10", "--verbose", "--app.overriddenbyarg", fromArgVal}
 
@@ -98,7 +97,7 @@ func Test_ReadFromJsonFile(t *testing.T) {
 	resetFlags()
 	nc := &FullConfig{}
 	confReader := NewConfReader("myappjson")
-	confReader.ConfigDirs = []string{"testdata"}
+	confReader.configDirs = []string{"testdata"}
 	err := confReader.Read(nc)
 	if assert.NoError(t, err) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
@@ -155,7 +154,6 @@ type ValidationConfig struct {
 }
 
 func Test_Validation(t *testing.T) {
-
 	cf := &ValidationConfig{}
 	reader := NewConfReader("myapp")
 
@@ -176,7 +174,6 @@ func Test_Validation(t *testing.T) {
 			assert.Equal(t, "localhost", cf.Host)
 		}
 	})
-
 }
 
 type DefaultVals struct {

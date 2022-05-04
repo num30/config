@@ -9,8 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"io"
-	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -35,13 +33,10 @@ nested:
   foo: bar
 */
 type ConfReader struct {
-	viper      *enviper.Enviper
-	configName string
-	// Set Log if you want to see extra logging from config manager
-	Log *log.Logger
-	//
-	ConfigDirs   []string
-	EnvVarPrefix string
+	viper        *enviper.Enviper
+	configName   string
+	configDirs   []string
+	envVarPrefix string
 }
 
 // NewConfReader creates new instance of ConfReader
@@ -49,9 +44,8 @@ type ConfReader struct {
 func NewConfReader(configName string) *ConfReader {
 	return &ConfReader{
 		viper:        enviper.New(viper.New()),
-		Log:          nil,
 		configName:   configName,
-		EnvVarPrefix: strings.ToUpper(configName),
+		envVarPrefix: strings.ToUpper(configName),
 	}
 }
 
@@ -71,7 +65,7 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 
 	c.viper.SetConfigFile(c.configName)
 
-	if c.ConfigDirs == nil || len(c.ConfigDirs) == 0 {
+	if c.configDirs == nil || len(c.configDirs) == 0 {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
@@ -81,12 +75,12 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 		c.viper.AddConfigPath(home)
 		c.viper.AddConfigPath("./")
 	} else {
-		for _, path := range c.ConfigDirs {
+		for _, path := range c.configDirs {
 			c.viper.AddConfigPath(path)
 		}
 	}
 	c.viper.SetConfigName(c.configName)
-	c.viper.SetEnvPrefix(c.EnvVarPrefix)
+	c.viper.SetEnvPrefix(c.envVarPrefix)
 
 	// Bind flags
 	if err := c.flagsBinding(configStruct); err != nil {
@@ -95,7 +89,6 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 
 	err := c.viper.Unmarshal(configStruct)
 	if err != nil {
-		c.log("Unable to decode into struct, %v", err)
 		return errors.Wrap(err, "failed to unmarshal struct")
 	}
 
@@ -104,14 +97,11 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
 		if len(validationErrors) > 0 {
-			c.log("Config validation errors: '%+v'", validationErrors)
 			if err != nil {
 				return errors.Wrap(err, "validation error")
 			}
 		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	return nil
 }
@@ -221,37 +211,17 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 		}
 
 	case reflect.Interface:
-		c.Log.Printf("Skipping interface")
+		// Skipping interface
 	}
 
-}
-
-func (c *ConfReader) BindFlag(confKey string, flag *pflag.Flag) error {
-	err := c.viper.BindPFlag(confKey, flag)
-
-	if err != nil {
-		errors.Wrap(err, "error binding flag")
-	}
-	return nil
-}
-
-func (c *ConfReader) log(s string, args ...interface{}) {
-	if c.Log != nil {
-		c.Log.Printf(s, args...)
-	}
-}
-
-func (c *ConfReader) WithLog(writer io.Writer) *ConfReader {
-	c.Log = log.New(writer, "ConfigReader", log.LstdFlags)
-	return c
 }
 
 func (c *ConfReader) WithSearchDirs(s ...string) *ConfReader {
-	c.ConfigDirs = s
+	c.configDirs = s
 	return c
 }
 
 func (c *ConfReader) WithoutPrefix() *ConfReader {
-	c.EnvVarPrefix = ""
+	c.envVarPrefix = ""
 	return c
 }
