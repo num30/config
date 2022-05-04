@@ -40,7 +40,7 @@ func main() {
 	os.Args = append(os.Args, "--debug", "")
 
 	// Run
-	cfgReader := config.NewConfReader("myconf").WithLog(os.Stdout).WithSearchDirs("./examples", ".")
+	cfgReader := config.NewConfReader("myconf").WithSearchDirs("./examples", ".")
 
 	conf := MyConfig{}
 	err := cfgReader.Read(&conf)
