@@ -115,58 +115,59 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	var flags = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
 	for _, v := range m {
-		switch v.Type.String() {
-		case "string":
+		switch v.Type.Kind() {
+		case reflect.String:
 			flags.String(v.Name, v.DefaultVal, "")
 
-		case "bool":
+		case reflect.Bool:
 			flags.Bool(v.Name, false, "")
 
-		case "float32":
+		case reflect.Float32:
 			flags.Float32(v.Name, 0, "")
 
-		case "float64":
+		case reflect.Float64:
 			flags.Float64(v.Name, 0, "")
 
-		case "time.Duration":
-			flags.Duration(v.Name, 0, "")
-
-		case "int":
+		case reflect.Int:
 			flags.Int(v.Name, 0, "")
 
-		case "int16":
+		case reflect.Int16:
 			flags.Int16(v.Name, 0, "")
 
-		case "int32":
+		case reflect.Int32:
 			flags.Int(v.Name, 0, "")
 
-		case "int64":
-			flags.Int64(v.Name, 0, "")
+		case reflect.Int64:
+			if v.Type.String() == "time.Duration" {
+				flags.Duration(v.Name, 0, "")
+			} else {
+				flags.Int64(v.Name, 0, "")
+			}
 
-		case "int8":
+		case reflect.Int8:
 			flags.Int8(v.Name, 0, "")
 
-		case "uint":
+		case reflect.Uint:
 			flags.Uint(v.Name, 0, "")
-		case "uint32":
+		case reflect.Uint32:
 			flags.Uint(v.Name, 0, "")
 
-		case "uint64":
+		case reflect.Uint64:
 			flags.Uint64P(v.Name, "", 0, "")
 
-		case "uint8":
+		case reflect.Uint8:
 			flags.Uint8(v.Name, 0, "")
 
-		case "uint16":
+		case reflect.Uint16:
 			flags.Uint16(v.Name, 0, "")
 
-		case "[]uint8":
-			flags.BytesBase64(v.Name, []byte{}, "byte array in base64")
-
-		case "[]string":
-			flags.StringSlice(v.Name, []string{}, "")
-
-			// TODO: add more types
+		case reflect.Slice:
+			switch v.Type.String() {
+			case "[]string":
+				flags.StringSlice(v.Name, []string{}, "")
+			case "[]uint8":
+				flags.BytesBase64(v.Name, []byte{}, "byte array in base64")
+			}
 		}
 	}
 
