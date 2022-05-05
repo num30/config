@@ -13,7 +13,8 @@ type MyConfig struct {
 	GlobalConfig `mapstructure:",squash"`
 	Debug        bool
 	Foo          FooConfig
-	DefaultVal   string `default:"default value"`
+	DefaultVal   string   `default:"default value"`
+	Slice        []string `default:"[\"default\"]"`
 }
 
 type FooConfig struct {
@@ -28,7 +29,7 @@ type GlobalConfig struct {
 }
 
 func main() {
-	// Arrange
+	// Refer to myconf.yaml for file configuration
 
 	// Use env vars to set config keys
 	os.Setenv("MYCONF_FOO_DURATIONFROMENVVAR", "10m")

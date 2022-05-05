@@ -113,4 +113,6 @@ We love help! Contribute by forking the repo and opening a pull requests or by c
 
 ## Credits :star:
 This package is based [Viper](https://github.com/spf13/viper)
-Special thanks to [enviper](https://github.com/iamolegga/enviper) for making environment variables work with viper.
+Special thanks:
+- [enviper](https://github.com/iamolegga/enviper) for making environment variables work with viper
+- [defaults](https://github.com/creasty/defaults) for making default values work with structures

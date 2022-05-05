@@ -2,3 +2,4 @@ foo:
   name: foo-name
   valueFromFile: 42
 verbose: true
+slice: ["foo", "bar"]
