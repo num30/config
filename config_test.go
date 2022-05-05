@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"flag"
 	"github.com/num30/config/lib"
 	"github.com/spf13/pflag"
@@ -30,11 +31,10 @@ type LocalConfig struct {
 }
 
 func Test_ConfigReader(t *testing.T) {
-
 	// arrange
 	resetFlags()
 	valFromVar := "valFromVar"
-	overridenVar := "overridenVar"
+	overriddenVar := "overriddenVar"
 	fromArgVal := "fromArgValue"
 
 	nc := &FullConfig{}
@@ -45,7 +45,7 @@ func Test_ConfigReader(t *testing.T) {
 	os.Setenv("MYAPP_APP_FROMENVVAR", valFromVar)
 	defer os.Unsetenv("MYAPP_APP_FROMENVVAR")
 
-	os.Setenv("MYAPP_APP_OVERRIDDENBYEVNVAR", overridenVar)
+	os.Setenv("MYAPP_APP_OVERRIDDENBYEVNVAR", overriddenVar)
 	defer os.Unsetenv("MYAPP_APP_OVERRIDDENBYEVNVAR")
 
 	flag.Set("fromArg", "ValFromArg")
@@ -190,4 +190,115 @@ func Test_DefaultFalse(t *testing.T) {
 		assert.Equal(t, "localhost", cf.DB.Host)
 		assert.Equal(t, "test", cf.Test)
 	}
+}
+
+type AllTypes struct {
+	Bool     bool
+	Int      int
+	Int8     int8
+	Int16    int16
+	Int32    int32
+	Int64    int64
+	Uint     uint
+	Uint8    uint8
+	Uint16   uint16
+	Uint32   uint32
+	Uint64   uint64
+	Float32  float32
+	Float64  float64
+	String   string
+	Bytes    []byte
+	Duration time.Duration
+	Slice    []string
+}
+
+func Test_AllTypesFlags(t *testing.T) {
+	resetFlags()
+	cf := &AllTypes{}
+	reader := NewConfReader("all-types")
+
+	// encode to base64
+	encoded := base64.StdEncoding.EncodeToString([]byte("test"))
+
+	os.Args = []string{"myapp", "--bool", "true", "--int", "1", "--int8", "1", "--int16", "1", "--int32", "1",
+		"--int64", "1", "--uint", "1", "--uint8", "1", "--uint16", "1", "--uint32", "1", "--uint64", "1",
+		"--float32", "1.1", "--float64", "1.1", "--string", "test", "--bytes", encoded, "--duration", "1m",
+		"--slice", "a"}
+	err := reader.Read(cf)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, true, cf.Bool)
+		assert.Equal(t, 1, cf.Int)
+		assert.Equal(t, int8(1), cf.Int8)
+		assert.Equal(t, int16(1), cf.Int16)
+		assert.Equal(t, int32(1), cf.Int32)
+		assert.Equal(t, int64(1), cf.Int64)
+		assert.Equal(t, uint(1), cf.Uint)
+		assert.Equal(t, uint8(1), cf.Uint8)
+		assert.Equal(t, uint16(1), cf.Uint16)
+		assert.Equal(t, uint32(1), cf.Uint32)
+		assert.Equal(t, uint64(1), cf.Uint64)
+		assert.Equal(t, float32(1.1), cf.Float32)
+		assert.Equal(t, float64(1.1), cf.Float64)
+		assert.Equal(t, "test", cf.String)
+		assert.Equal(t, []byte("test"), cf.Bytes)
+		assert.Equal(t, 1*time.Minute, cf.Duration)
+		assert.Equal(t, []string{"a"}, cf.Slice)
+	}
+}
+
+type SliceConf struct {
+	Slice []string
+}
+
+func Test_Slice(t *testing.T) {
+	resetFlags()
+
+	t.Run("envVar", func(t *testing.T) {
+		cfg := SliceConf{}
+		os.Setenv("SLICE_SLICE", "a,b,c")
+		defer os.Unsetenv("SLICE_SLICE")
+		reader := NewConfReader("slice")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"a", "b", "c"}, cfg.Slice)
+		}
+	})
+
+	t.Run("file", func(t *testing.T) {
+		cfg := SliceConf{}
+		reader := NewConfReader("slice").WithSearchDirs("testdata")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"a", "b", "c"}, cfg.Slice)
+		}
+	})
+
+	t.Run("cmdArgs", func(t *testing.T) {
+		cfg := SliceConf{}
+		os.Args = []string{"myapp", "--slice", "a", "--slice", "b"}
+		reader := NewConfReader("slice-args")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"a", "b"}, cfg.Slice)
+		}
+	})
+}
+
+func Test_ByteArray(t *testing.T) {
+	resetFlags()
+	cfg := struct {
+		Bytes []byte
+	}{}
+
+	t.Run("envVar", func(t *testing.T) {
+		encoded := base64.StdEncoding.EncodeToString([]byte("test"))
+		os.Args = []string{"myapp", "--bytes", encoded}
+
+		reader := NewConfReader("slice")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "test", string(cfg.Bytes))
+		}
+	})
 }

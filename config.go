@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
@@ -120,6 +121,7 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 
 		case "bool":
 			flags.Bool(v.Name, false, "")
+
 		case "float32":
 			flags.Float32(v.Name, 0, "")
 
@@ -130,10 +132,22 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 			flags.Duration(v.Name, 0, "")
 
 		case "int":
+			flags.Int(v.Name, 0, "")
+
+		case "int16":
+			flags.Int16(v.Name, 0, "")
+
 		case "int32":
 			flags.Int(v.Name, 0, "")
 
+		case "int64":
+			flags.Int64(v.Name, 0, "")
+
+		case "int8":
+			flags.Int8(v.Name, 0, "")
+
 		case "uint":
+			flags.Uint(v.Name, 0, "")
 		case "uint32":
 			flags.Uint(v.Name, 0, "")
 
@@ -142,6 +156,15 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 
 		case "uint8":
 			flags.Uint8(v.Name, 0, "")
+
+		case "uint16":
+			flags.Uint16(v.Name, 0, "")
+
+		case "[]uint8":
+			flags.BytesBase64(v.Name, []byte{}, "byte array in base64")
+
+		case "[]string":
+			flags.StringSlice(v.Name, []string{}, "")
 
 			// TODO: add more types
 		}
@@ -154,7 +177,21 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	for k, v := range m {
 		f := flags.Lookup(v.Name)
 		if f != nil && f.Changed {
-			c.viper.Set(k, f.Value)
+			if v.Type.Kind() == reflect.Slice {
+				// byte array should be in base64
+				if v.Type.String() == "[]uint8" {
+					b, err := base64.StdEncoding.DecodeString(f.Value.String())
+					if err != nil {
+						return errors.Wrap(err, "failed to decode base64 value for flag: "+v.Name)
+					}
+					c.viper.Set(k, b)
+				} else {
+					c.viper.Set(k, f.Value.(pflag.SliceValue).GetSlice())
+				}
+
+			} else {
+				c.viper.Set(k, f.Value)
+			}
 		}
 
 	}
