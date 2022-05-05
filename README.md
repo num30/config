@@ -4,6 +4,12 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/num30/config)](https://goreportcard.com/report/github.com/num30/config)
 [![Go Reference](https://pkg.go.dev/badge/github.com/num30/config.svg)](https://pkg.go.dev/github.com/num30/config)
 
+## Features
+- declarative way of defining configuration
+- reading configuration from file, environment variables or command line arguments in one lines of code
+- validation 
+
+## Example 
 `config` is a package that supports reading configuration into a struct from files, environment variable and command line arguments.
 All you need is to declare a config structure and call `Read` method.
 
@@ -22,8 +28,8 @@ type Database struct {
 }
 
 func main() {
-    var config Config
-    err := config.NewConfReader("myconf").Read(&config)
+    var config Config 
+    err := config.NewConfReader("myconf").Read(&config) 
     if err != nil {
         panic(err)
     }
@@ -41,6 +47,8 @@ db:
 :information_source: Refer to the [example](/examples/main.go) that illustrates how to use `ConfReader`. 
 
 Execute  `go run examples/main.go` to run the example. 
+
+
 
 ### Install :package:
 ``` go
