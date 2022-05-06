@@ -114,7 +114,8 @@ type Config struct {
     Host           string `validate:"required"`
 }
 ```
-If validation fails `ConfReader.Read` will return an error. 
+
+For full list of validation tag refer to [validator](https://github.com/go-playground/validator#baked-in-validations) documentation.
 
 ##  Contributing :clap:
 We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
