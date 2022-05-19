@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/base64"
-	"flag"
 	"github.com/num30/config/lib"
 	"github.com/spf13/pflag"
 	"os"
@@ -47,8 +46,6 @@ func Test_ConfigReader(t *testing.T) {
 
 	os.Setenv("MYAPP_APP_OVERRIDDENBYEVNVAR", overriddenVar)
 	defer os.Unsetenv("MYAPP_APP_OVERRIDDENBYEVNVAR")
-
-	flag.Set("fromArg", "ValFromArg")
 
 	// act
 	err := confReader.Read(nc)

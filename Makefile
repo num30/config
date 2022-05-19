@@ -5,4 +5,4 @@ test:
 
 # Go lint
 lint:
-	staticcheck .
+	golangci-lint run
