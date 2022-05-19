@@ -8,7 +8,7 @@ import "fmt"
 type PostgresqlDb struct {
 	Host       string `default:"localhost"`
 	Password   string `default:"pass"`
-	DbName     string `default:"postgres"`
+	DbName     string
 	Username   string `default:"postgres"`
 	Port       int    `default:"5432"`
 	SslEnabled bool   `default:"false"`
