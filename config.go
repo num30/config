@@ -6,7 +6,6 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamolegga/enviper"
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -68,7 +67,7 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 
 	if c.configDirs == nil || len(c.configDirs) == 0 {
 		// Find home directory.
-		home, err := homedir.Dir()
+		home, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
