@@ -45,7 +45,7 @@ func NewConfReader(configName string) *ConfReader {
 	return &ConfReader{
 		viper:        enviper.New(viper.New()),
 		configName:   configName,
-		envVarPrefix: strings.ToUpper(configName),
+		envVarPrefix: "",
 	}
 }
 
@@ -258,7 +258,8 @@ func (c *ConfReader) WithSearchDirs(s ...string) *ConfReader {
 	return c
 }
 
-func (c *ConfReader) WithoutPrefix() *ConfReader {
-	c.envVarPrefix = ""
+// WithPrefix sets the prefix for environment variables
+func (c *ConfReader) WithPrefix(prefix string) *ConfReader {
+	c.envVarPrefix = prefix
 	return c
 }
