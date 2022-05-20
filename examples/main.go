@@ -32,7 +32,7 @@ func main() {
 	// Refer to myconf.yaml for file configuration
 
 	// Use env vars to set config keys
-	os.Setenv("MYCONF_FOO_DURATIONFROMENVVAR", "10m")
+	os.Setenv("FOO_DURATIONFROMENVVAR", "10m")
 
 	// Use command args to set config keys
 	os.Args = append(os.Args, "--nested", "ThisCameFromAnArg")

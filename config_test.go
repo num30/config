@@ -42,11 +42,11 @@ func Test_ConfigReader(t *testing.T) {
 
 	os.Args = []string{"get", "--id", "10", "--verbose", "--app.overriddenbyarg", fromArgVal}
 
-	os.Setenv("MYAPP_APP_FROMENVVAR", valFromVar)
-	defer os.Unsetenv("MYAPP_APP_FROMENVVAR")
+	os.Setenv("APP_FROMENVVAR", valFromVar)
+	defer os.Unsetenv("APP_FROMENVVAR")
 
-	os.Setenv("MYAPP_APP_OVERRIDDENBYEVNVAR", overriddenVar)
-	defer os.Unsetenv("MYAPP_APP_OVERRIDDENBYEVNVAR")
+	os.Setenv("APP_OVERRIDDENBYEVNVAR", overriddenVar)
+	defer os.Unsetenv("APP_OVERRIDDENBYEVNVAR")
 
 	// act
 	err := confReader.Read(nc)
@@ -82,8 +82,21 @@ func Test_ReadFromFile(t *testing.T) {
 func Test_EnvVarsNoPrefix(t *testing.T) {
 	resetFlags()
 	nc := &FullConfig{}
-	confReader := NewConfReader("myapp").WithoutPrefix()
+	confReader := NewConfReader("myapp")
 	os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
+
+	err := confReader.Read(nc)
+	if assert.NoError(t, err) {
+		assert.Equal(t, "valFromEnvVar", nc.App.FromEnvVar)
+	}
+}
+
+func Test_EnvVarsWithPrefix(t *testing.T) {
+	resetFlags()
+	nc := &FullConfig{}
+	confReader := NewConfReader("myapp").WithPrefix("MYAPP")
+	os.Setenv("MYAPP_APP_FROMENVVAR", "valFromEnvVar")
+	defer os.Unsetenv("APP_FROMENVVAR")
 
 	err := confReader.Read(nc)
 	if assert.NoError(t, err) {
@@ -165,8 +178,8 @@ func Test_Validation(t *testing.T) {
 
 	t.Run("passes", func(t *testing.T) {
 		resetFlags()
-		os.Setenv("MYAPP_HOST", "localhost")
-		defer os.Unsetenv("MYAPP_HOST")
+		os.Setenv("HOST", "localhost")
+		defer os.Unsetenv("HOST")
 		err := reader.Read(cf)
 		if assert.NoError(t, err) {
 			assert.Equal(t, "localhost", cf.Host)
@@ -254,8 +267,8 @@ func Test_Slice(t *testing.T) {
 
 	t.Run("envVar", func(t *testing.T) {
 		cfg := SliceConf{}
-		os.Setenv("SLICE_SLICE", "a,b,c")
-		defer os.Unsetenv("SLICE_SLICE")
+		os.Setenv("SLICE", "a,b,c")
+		defer os.Unsetenv("SLICE")
 		reader := NewConfReader("slice")
 		err := reader.Read(&cfg)
 		if assert.NoError(t, err) {
