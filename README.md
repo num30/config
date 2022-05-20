@@ -126,12 +126,12 @@ For full list of validation tag refer to [validator](https://github.com/go-playg
 	    Slice []string
     }
     ```
-    then we can set values for slice like
-    -- environment variable
+    then we can set values for slice in the following ways:
+    - environment variable
         `export SLICE_SLICE="a,b"`
-    -- command line argument
+    - command line argument
         `myapp --slice", "a", "--slice", "b"`
-    -- config file
+    - config file
         `slice: [ "a", "b"]`
 
     
