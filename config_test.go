@@ -2,12 +2,13 @@ package config
 
 import (
 	"encoding/base64"
-	"github.com/num30/config/lib"
-	"github.com/spf13/pflag"
 	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/num30/config/lib"
+	"github.com/spf13/pflag"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -220,7 +221,7 @@ func Test_AllTypesFlags(t *testing.T) {
 	os.Args = []string{"myapp", "--bool", "true", "--int", "1", "--int8", "1", "--int16", "1", "--int32", "1",
 		"--int64", "1", "--uint", "1", "--uint8", "1", "--uint16", "1", "--uint32", "1", "--uint64", "1",
 		"--float32", "1.1", "--float64", "1.1", "--string", "test", "--bytes", encoded, "--duration", "1m",
-		"--slice", "a"}
+		"--slice", "a", "--slice", "b"}
 	err := reader.Read(cf)
 
 	if assert.NoError(t, err) {
@@ -240,7 +241,7 @@ func Test_AllTypesFlags(t *testing.T) {
 		assert.Equal(t, "test", cf.String)
 		assert.Equal(t, []byte("test"), cf.Bytes)
 		assert.Equal(t, 1*time.Minute, cf.Duration)
-		assert.Equal(t, []string{"a"}, cf.Slice)
+		assert.Equal(t, []string{"a", "b"}, cf.Slice)
 	}
 }
 
