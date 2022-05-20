@@ -117,6 +117,25 @@ type Config struct {
 
 For full list of validation tag refer to [validator](https://github.com/go-playground/validator#baked-in-validations) documentation.
 
+## FAQ
+
+- How to set values for slice? 
+    If we have struct like
+    ```
+    type SliceConf struct {
+	    Slice []string
+    }
+    ```
+    then we can set values for slice in the following ways:
+    - environment variable
+        `export SLICE_SLICE="a,b"`
+    - command line argument
+        `myapp --slice", "a", "--slice", "b"`
+    - config file
+        `slice: [ "a", "b"]`
+
+    
+
 ##  Contributing :clap:
 We love help! Contribute by forking the repo and opening a pull requests or by creating an issue.
 
