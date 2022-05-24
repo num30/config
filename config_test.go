@@ -313,3 +313,31 @@ func Test_ByteArray(t *testing.T) {
 		}
 	})
 }
+
+func Test_InputStructErrors(t *testing.T) {
+	resetFlags()
+	confReader := NewConfReader("myapp").WithSearchDirs("testdata")
+
+	t.Run("notAPointer", func(t *testing.T) {
+		var nc FullConfig
+		err := confReader.Read(nc)
+		if assert.Error(t, err, "failed to read") {
+			assert.Contains(t, err.Error(), "config struct must be pointer")
+		}
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		err := confReader.Read(nil)
+		if assert.Error(t, err, "failed to read") {
+			assert.Contains(t, err.Error(), "config struct is nil")
+		}
+	})
+
+	t.Run("zero", func(t *testing.T) {
+		var nc *FullConfig
+		err := confReader.Read(nc)
+		if assert.Error(t, err, "failed to read") {
+			assert.Contains(t, err.Error(), "config struct is nil")
+		}
+	})
+}
