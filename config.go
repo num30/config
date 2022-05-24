@@ -3,15 +3,16 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
+	"reflect"
+	"strings"
+
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamolegga/enviper"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"os"
-	"reflect"
-	"strings"
 )
 
 /* ConfReader reads configuration from config file, environment variables or command line flags.
@@ -51,8 +52,14 @@ func NewConfReader(configName string) *ConfReader {
 
 // Read reads config from config file, env vars or flags.
 func (c *ConfReader) Read(configStruct interface{}) error {
-	if configStruct == nil {
+	// validate the input struct
+	rval := reflect.ValueOf(configStruct)
+	if configStruct == nil || rval == reflect.Zero(rval.Type()) {
 		return errors.New("config struct is nil")
+	}
+
+	if rval.Kind() != reflect.Ptr {
+		return errors.New("config struct must be pointer")
 	}
 
 	// set default values
