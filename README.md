@@ -14,26 +14,37 @@
 All you need is to declare a config structure and call `Read` method.
 
 ``` go
-type Config struct {	
-	DB                Database	
-	Debug             Debug
+package main
+
+import (
+	"fmt"
+
+	"github.com/num30/config"
+)
+
+type Config struct {
+	DB        Database `default:{}`
+	DebugMode bool     `flag:"debug"`
 }
 
 type Database struct {
-	Host       string
-	Password   string
-	DbName     string
-	Username   string
-	Port       int
+	Host     string `default:"localhost" validate:"required"`
+	Password string `validate:"required"`
+	DbName   string `default:"mydb"`
+	Username string `default:"root"`
+	Port     int    `default:"5432"`
 }
 
 func main() {
-    var config Config 
-    err := config.NewConfReader("myconf").Read(&config) 
-    if err != nil {
-        panic(err)
-    }
+	var conf Config
+	err := config.NewConfReader("myconf").Read(&conf)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Config %+v", conf)
 }
+
 ```
 When you want to change, for example, DB Host of your applications you can do any of the following:
 1. create config `myconf.yaml` file in home directory 
