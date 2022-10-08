@@ -29,7 +29,7 @@ type Config struct {
 
 type Database struct {
 	Host     string `default:"localhost" validate:"required"`
-	Password string `validate:"required"`
+	Password string `validate:"required" envvar:"DB_PASS"`
 	DbName   string `default:"mydb"`
 	Username string `default:"root"`
 	Port     int    `default:"5432"`
@@ -46,7 +46,7 @@ func main() {
 }
 
 ```
-When you want to change, for example, DB Host of your applications you can do any of the following:
+When you want to change, a DB Host of your applications you can do it in 3 ways:
 1. create config `myconf.yaml` file in home directory 
 ``` 
 db:
@@ -100,6 +100,12 @@ Config file type could be any type supported by  [viper](https://github.com/spf1
 To set a flag via environment variable, make all letters uppercase and replace '.' with '_' in path. For example: app.Server.Port -> APP_SERVER_PORT
 
 You can set a prefix for environment variables. For example `NewConfReader("myconf").WithPrefix("MYAPP")` will search for environment variables like `MYAPP_DB_HOST`
+
+Environment variable names could be set in the struct tag `envvar`. For example 
+```
+Password string `envvar:"DB_PASS"`
+``` 
+will use value from environment variable `DB_PASS` to configure `Password` field.
 
 ### Command Line Arguments :computer: 
 
