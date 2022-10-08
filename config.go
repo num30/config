@@ -15,29 +15,32 @@ import (
 	"github.com/spf13/viper"
 )
 
-/* ConfReader reads configuration from config file, environment variables or command line flags.
- Flags have precedence over env vars and env vars have precedence over config file.
-
+/*
+	ConfReader reads configuration from config file, environment variables or command line flags.
+	Flags have precedence over env vars and env vars have precedence over config file.
 
 For example:
-	type NestedConf struct {
-		Foo string
-	}
 
-  	type Config struct{
-      Nested NestedConf
- 	}
+		type NestedConf struct {
+			Foo string
+		}
+
+	  	type Config struct{
+	      Nested NestedConf
+	 	}
 
 in that case flag --nested.foo will be mapped automatically
 This flag could be also set by NESTED_FOO env var or by creating  config file .ukama.yaml:
 nested:
-  foo: bar
+
+	foo: bar
 */
 type ConfReader struct {
 	viper        *enviper.Enviper
 	configName   string
 	configDirs   []string
 	envVarPrefix string
+	Verbose      bool
 }
 
 // NewConfReader creates new instance of ConfReader
@@ -115,12 +118,12 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 
 func (c *ConfReader) flagsBinding(conf interface{}) error {
 	t := reflect.TypeOf(conf)
-	m := map[string]*flagInfo{}
-	c.dumpStruct(t, "", m)
+	tagsInfo := map[string]*flagInfo{}
+	tagsInfo = c.dumpStruct(t, "", tagsInfo)
 
 	var flags = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
-	for _, v := range m {
+	for _, v := range tagsInfo {
 		switch v.Type.Kind() {
 		case reflect.String:
 			flags.String(v.Name, v.DefaultVal, "")
@@ -175,13 +178,20 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 				flags.BytesBase64(v.Name, []byte{}, "byte array in base64")
 			}
 		}
+
+		if v.EnvVar != "" {
+			err := c.viper.BindEnv(v.Name, v.EnvVar)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	err := flags.Parse(os.Args[1:])
 	if err != nil {
 		return errors.Wrap(err, "failed to parse flags")
 	}
-	for k, v := range m {
+	for k, v := range tagsInfo {
 		f := flags.Lookup(v.Name)
 		if f != nil && f.Changed {
 			if v.Type.Kind() == reflect.Slice {
@@ -210,14 +220,17 @@ type flagInfo struct {
 	Name       string
 	Type       reflect.Type
 	DefaultVal string
+	EnvVar     string
 }
 
-func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*flagInfo) {
-	fmt.Printf("%s: %s", path, t.Name())
+func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*flagInfo) map[string]*flagInfo {
+	if c.Verbose {
+		fmt.Printf("%s: %s", path, t.Name())
+	}
 	switch t.Kind() {
 	case reflect.Ptr:
 		originalValue := t.Elem()
-		c.dumpStruct(originalValue, path, res)
+		res = c.dumpStruct(originalValue, path, res)
 
 	// If it is a struct we translate each field
 	case reflect.Struct:
@@ -228,28 +241,32 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 				f.Type.Kind() != reflect.Func && f.Type.Kind() != reflect.Interface && f.Type.Kind() != reflect.UnsafePointer {
 
 				// do we have flag name override ?
-				val := f.Tag.Get("flag")
+				flagVal := f.Tag.Get("flag")
+				envVar := f.Tag.Get("envvar")
+
 				fieldPath := strings.TrimPrefix(strings.ToLower(path+"."+f.Name), ".")
-				if val != "" {
+				if flagVal != "" {
 					res[fieldPath] = &flagInfo{
-						Name:       val,
+						Name:       flagVal,
 						Type:       f.Type,
 						DefaultVal: f.Tag.Get("default"),
+						EnvVar:     envVar,
 					}
 				} else {
 					res[fieldPath] = &flagInfo{
 						Name:       fieldPath,
 						Type:       f.Type,
 						DefaultVal: f.Tag.Get("default"),
+						EnvVar:     envVar,
 					}
 				}
 
 			} else if f.Type.Kind() == reflect.Struct || f.Type.Kind() == reflect.Ptr {
 				val := f.Tag.Get("mapstructure")
 				if strings.Contains(val, "squash") {
-					c.dumpStruct(f.Type, path, res)
+					res = c.dumpStruct(f.Type, path, res)
 				} else {
-					c.dumpStruct(f.Type, path+"."+f.Name, res)
+					res = c.dumpStruct(f.Type, path+"."+f.Name, res)
 				}
 			}
 		}
@@ -257,7 +274,7 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 	case reflect.Interface:
 		// Skipping interface
 	}
-
+	return res
 }
 
 func (c *ConfReader) WithSearchDirs(s ...string) *ConfReader {
