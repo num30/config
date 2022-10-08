@@ -28,6 +28,7 @@ type LocalConfig struct {
 	FromConfig         string
 	OverriddenByEvnVar string
 	OverriddenByArg    string
+	EnvVarName         string `envvar:"CUSTOM_ENV_VAR"`
 }
 
 func Test_ConfigReader(t *testing.T) {
@@ -48,6 +49,9 @@ func Test_ConfigReader(t *testing.T) {
 	os.Setenv("APP_OVERRIDDENBYEVNVAR", overriddenVar)
 	defer os.Unsetenv("APP_OVERRIDDENBYEVNVAR")
 
+	os.Setenv("CUSTOM_ENV_VAR", "valFromEnvVar")
+	defer os.Unsetenv("CUSTOM_ENV_VAR")
+
 	// act
 	err := confReader.Read(nc)
 
@@ -58,6 +62,7 @@ func Test_ConfigReader(t *testing.T) {
 		assert.Equal(t, "valFromConf", nc.App.FromConfig)
 		assert.Equal(t, valFromVar, nc.App.FromEnvVar)
 		assert.Equal(t, fromArgVal, nc.App.OverriddenByArg)
+		assert.Equal(t, "valFromEnvVar", nc.App.EnvVarName)
 	}
 }
 
@@ -129,7 +134,7 @@ type dmSibling struct {
 	FromEnvVar string
 }
 
-func Test_DumpStruct(t *testing.T) {
+func Test_dumpStruct(t *testing.T) {
 	m := map[string]*flagInfo{}
 	c := &ConfReader{}
 	c.dumpStruct(reflect.TypeOf(dmParent{}), "", m)
