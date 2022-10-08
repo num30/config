@@ -9,7 +9,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
-	"github.com/iamolegga/enviper"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -36,7 +36,7 @@ nested:
 	foo: bar
 */
 type ConfReader struct {
-	viper        *enviper.Enviper
+	viper        *viper.Viper
 	configName   string
 	configDirs   []string
 	envVarPrefix string
@@ -47,7 +47,7 @@ type ConfReader struct {
 // configName is a name of config file name without extension and evn vars prefix
 func NewConfReader(configName string) *ConfReader {
 	return &ConfReader{
-		viper:        enviper.New(viper.New()),
+		viper:        viper.New(),
 		configName:   configName,
 		envVarPrefix: "",
 	}
@@ -95,6 +95,15 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 	// Bind flags
 	if err := c.flagsBinding(configStruct); err != nil {
 		return err
+	}
+
+	if err := c.viper.ReadInConfig(); err != nil {
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			// 	do nothing
+		default:
+			return err
+		}
 	}
 
 	err := c.viper.Unmarshal(configStruct)
@@ -184,6 +193,11 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			err := c.viper.BindEnv(v.Name, c.getEnvVarName(v.Name))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -214,6 +228,16 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	}
 
 	return nil
+}
+
+func (c *ConfReader) getEnvVarName(path string) string {
+	path = strings.Replace(path, ".", "_", -1)
+	path = strings.ToUpper(path)
+
+	if c.envVarPrefix != "" {
+		return c.envVarPrefix + "_" + path
+	}
+	return path
 }
 
 type flagInfo struct {
