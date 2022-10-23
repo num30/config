@@ -298,6 +298,7 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 	case reflect.Interface:
 		// Skipping interface
 	}
+
 	return res
 }
 
@@ -306,8 +307,8 @@ func (c *ConfReader) WithSearchDirs(s ...string) *ConfReader {
 	return c
 }
 
-// WithPrefix sets the prefix for environment variables
+// WithPrefix sets the prefix for environment variables. Prefix is uppercased automatically
 func (c *ConfReader) WithPrefix(prefix string) *ConfReader {
-	c.envVarPrefix = prefix
+	c.envVarPrefix = strings.ToUpper(prefix)
 	return c
 }
