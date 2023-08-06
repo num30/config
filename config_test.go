@@ -125,8 +125,11 @@ func Test_WatchWithFile(t *testing.T) {
 	resetFlags()
 	nc := &FullConfig{}
 
-	os.Mkdir("testdata/tmp", 0755)
-	err := os.WriteFile("testdata/tmp/changing_file.json", []byte(`{"verbose":"true"}`), 0644)
+	err := os.Mkdir("testdata/tmp", 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.WriteFile("testdata/tmp/changing_file.json", []byte(`{"verbose":"true"}`), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
