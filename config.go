@@ -301,7 +301,7 @@ func (c *ConfReader) WithPrefix(prefix string) *ConfReader {
 // This will ensure that the config is not reloaded while you are accessing it.
 func (c *ConfReader) Watch() *sync.RWMutex {
 	if c.configStruct == nil {
-		log.Fatalln("ConfReader: config struct is not set. Call Read before Watch")
+		panic("ConfReader: config struct is not set. Call Read before Watch")
 	}
 	rwmutex := &sync.RWMutex{}
 
