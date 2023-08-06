@@ -2,15 +2,18 @@ package config
 
 import (
 	"encoding/base64"
-	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/creasty/defaults"
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
 	"github.com/iamolegga/enviper"
 	"github.com/pkg/errors"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -41,6 +44,7 @@ type ConfReader struct {
 	configDirs   []string
 	envVarPrefix string
 	Verbose      bool
+	configStruct any
 }
 
 // NewConfReader creates new instance of ConfReader
@@ -70,8 +74,8 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 		return errors.Wrap(err, "failed to set default values")
 	}
 
-	//jww.SetLogThreshold(jww.LevelTrace)
-	//jww.SetStdoutThreshold(jww.LevelTrace)
+	jww.SetLogThreshold(jww.LevelTrace)
+	jww.SetStdoutThreshold(jww.LevelTrace)
 
 	c.viper.SetConfigFile(c.configName)
 
@@ -113,6 +117,8 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 		}
 		return err
 	}
+
+	c.configStruct = configStruct
 	return nil
 }
 
@@ -225,7 +231,7 @@ type flagInfo struct {
 
 func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*flagInfo) map[string]*flagInfo {
 	if c.Verbose {
-		fmt.Printf("%s: %s", path, t.Name())
+		log.Printf("%s: %s", path, t.Name())
 	}
 	switch t.Kind() {
 	case reflect.Ptr:
@@ -282,8 +288,32 @@ func (c *ConfReader) WithSearchDirs(s ...string) *ConfReader {
 	return c
 }
 
-// WithPrefix sets the prefix for environment variables
+// WithPrefix sets the prefix for environment variables. It adds '_' to the end of the prefix.
+// For example, if prefix is "MYAPP", then environment variable for field "Name" will be "MYAPP_NAME".
 func (c *ConfReader) WithPrefix(prefix string) *ConfReader {
 	c.envVarPrefix = prefix
 	return c
+}
+
+// Watch watches for config changes and reloads config. This method should be called after Read() to make sure that ConfReader konws which struct to reload.
+// Returns a mutex that can be used to synchronize access to the config.
+// If you care about thread safety, call RLock() on the mutex while accessing the config and the RUnlock().
+// This will ensure that the config is not reloaded while you are accessing it.
+func (c *ConfReader) Watch() *sync.RWMutex {
+	if c.configStruct == nil {
+		log.Fatalln("ConfReader: config struct is not set. Call Read before Watch")
+	}
+	rwmutex := &sync.RWMutex{}
+
+	c.viper.WatchConfig()
+	c.viper.OnConfigChange(func(e fsnotify.Event) {
+		rwmutex.Lock()
+		defer rwmutex.Unlock()
+		err := c.Read(c.configStruct)
+		if err != nil {
+			log.Printf("failed to reload config: %s\n", err)
+		}
+
+	})
+	return rwmutex
 }

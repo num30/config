@@ -121,6 +121,51 @@ func Test_ReadFromJsonFile(t *testing.T) {
 	}
 }
 
+func Test_WatchWithFile(t *testing.T) {
+	resetFlags()
+	nc := &FullConfig{}
+
+	err := os.Mkdir("testdata/tmp", 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.WriteFile("testdata/tmp/changing_file.json", []byte(`{"verbose":"true"}`), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll("testdata/tmp")
+	confReader := NewConfReader("changing_file")
+	confReader.configDirs = []string{"testdata/tmp"}
+	err = confReader.Read(nc)
+	if assert.NoError(t, err) {
+		assert.Equal(t, true, nc.Verbose)
+	}
+	mutex := confReader.Watch()
+
+	t.Run("configChanges", func(t *testing.T) {
+		err = os.WriteFile("testdata/tmp/changing_file.json", []byte(`{"verbose":"false"}`), 0644)
+		if assert.NoError(t, err) {
+			time.Sleep(10 * time.Millisecond)
+			assert.Equal(t, false, nc.Verbose)
+		}
+	})
+
+	t.Run("configStructLock", func(t *testing.T) {
+		mutex.RLock()
+		err = os.WriteFile("testdata/tmp/changing_file.json", []byte(`{"verbose":"true"}`), 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		//time.Sleep(time.Second)
+		assert.Equal(t, false, nc.Verbose)
+
+		mutex.RUnlock()
+		time.Sleep(10 * time.Millisecond)
+		assert.Equal(t, true, nc.Verbose)
+	})
+}
+
 type dmParent struct {
 	GlobalConfig `mapstructure:",squash"`
 	Conf         dmSibling `flag:"notAllowed"`
