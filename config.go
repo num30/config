@@ -13,7 +13,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/iamolegga/enviper"
 	"github.com/pkg/errors"
-	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -74,8 +73,8 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 		return errors.Wrap(err, "failed to set default values")
 	}
 
-	jww.SetLogThreshold(jww.LevelTrace)
-	jww.SetStdoutThreshold(jww.LevelTrace)
+	// jww.SetLogThreshold(jww.LevelTrace)
+	// jww.SetStdoutThreshold(jww.LevelTrace)
 
 	c.viper.SetConfigFile(c.configName)
 
