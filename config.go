@@ -193,6 +193,8 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	}
 
 	err := flags.Parse(os.Args[1:])
+	// we use pflag.ExitOnError so we should not get error here
+	// but just in case I'll keep it
 	if err != nil {
 		return errors.Wrap(err, "failed to parse flags")
 	}
@@ -242,8 +244,12 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
 
-			if f.Type.Kind() != reflect.Struct && f.Type.Kind() != reflect.Ptr && f.Type.Kind() != reflect.Chan &&
-				f.Type.Kind() != reflect.Func && f.Type.Kind() != reflect.Interface && f.Type.Kind() != reflect.UnsafePointer {
+			if f.Type.Kind() != reflect.Struct &&
+				f.Type.Kind() != reflect.Ptr &&
+				f.Type.Kind() != reflect.Chan &&
+				f.Type.Kind() != reflect.Func &&
+				f.Type.Kind() != reflect.Interface &&
+				f.Type.Kind() != reflect.UnsafePointer {
 
 				// do we have flag name override ?
 				flagVal := f.Tag.Get("flag")

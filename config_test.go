@@ -73,27 +73,44 @@ func resetFlags() {
 }
 
 func Test_ReadFromFile(t *testing.T) {
-	resetFlags()
-	nc := &FullConfig{}
-	confReader := NewConfReader("myapp").WithSearchDirs("testdata")
 
-	err := confReader.Read(nc)
-	if assert.NoError(t, err) {
-		assert.Equal(t, "valFromConf", nc.App.FromConfig)
-		assert.Equal(t, true, nc.Verbose)
-	}
+	t.Run("readSuccessfully", func(t *testing.T) {
+		resetFlags()
+		nc := &FullConfig{}
+		confReader := NewConfReader("myapp").WithSearchDirs("testdata")
+
+		err := confReader.Read(nc)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "valFromConf", nc.App.FromConfig)
+			assert.Equal(t, true, nc.Verbose)
+		}
+	})
+
+	t.Run("malformedFile", func(t *testing.T) {
+		resetFlags()
+		nc := &FullConfig{}
+		confReader := NewConfReader("myapp-malformed").WithSearchDirs("testdata")
+
+		err := confReader.Read(nc)
+		if assert.Error(t, err, "failed to read") {
+			assert.Contains(t, err.Error(), "failed to unmarshal struct")
+		}
+	})
 }
 
 func Test_EnvVarsNoPrefix(t *testing.T) {
-	resetFlags()
-	nc := &FullConfig{}
-	confReader := NewConfReader("myapp")
-	os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
+	t.Run("readSuccessfully", func(t *testing.T) {
+		resetFlags()
+		nc := &FullConfig{}
+		confReader := NewConfReader("myapp")
+		os.Setenv("APP_FROMENVVAR", "valFromEnvVar")
 
-	err := confReader.Read(nc)
-	if assert.NoError(t, err) {
-		assert.Equal(t, "valFromEnvVar", nc.App.FromEnvVar)
-	}
+		err := confReader.Read(nc)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "valFromEnvVar", nc.App.FromEnvVar)
+		}
+	})
+
 }
 
 func Test_EnvVarsWithPrefix(t *testing.T) {
@@ -198,7 +215,10 @@ type dmSibling struct {
 
 func Test_dumpStruct(t *testing.T) {
 	m := map[string]*flagInfo{}
-	c := &ConfReader{}
+	c := &ConfReader{
+		Verbose: true,
+	}
+
 	c.dumpStruct(reflect.TypeOf(dmParent{}), "", m)
 
 	if assert.NotNil(t, m["verbose"]) {
@@ -254,20 +274,37 @@ func Test_Validation(t *testing.T) {
 	})
 }
 
-type DefaultVals struct {
-	DB   lib.PostgresqlDb
-	Test string `default:"test"`
-}
+func Test_SetDefault(t *testing.T) {
+	t.Run("defaultValuesSet", func(t *testing.T) {
+		type DefaultVals struct {
+			DB   lib.PostgresqlDb
+			Test string `default:"test"`
+		}
 
-func Test_DefaultFalse(t *testing.T) {
-	resetFlags()
-	cf := &DefaultVals{}
-	reader := NewConfReader("def-vals")
-	err := reader.Read(cf)
-	if assert.NoError(t, err) {
-		assert.Equal(t, "localhost", cf.DB.Host)
-		assert.Equal(t, "test", cf.Test)
-	}
+		resetFlags()
+		cf := &DefaultVals{}
+		reader := NewConfReader("def-vals")
+		err := reader.Read(cf)
+		if assert.NoError(t, err) {
+			assert.Equal(t, "localhost", cf.DB.Host)
+			assert.Equal(t, "test", cf.Test)
+		}
+	})
+
+	t.Run("failedToSetDefault", func(t *testing.T) {
+		type DefaultValsFail struct {
+			Test map[string]string `default:"test"`
+		}
+
+		resetFlags()
+		cf := &DefaultValsFail{}
+		reader := NewConfReader("def-vals-failed")
+		err := reader.Read(cf)
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), "failed to set default values")
+		}
+
+	})
 }
 
 type AllTypes struct {
@@ -407,4 +444,8 @@ func Test_InputStructErrors(t *testing.T) {
 			assert.Contains(t, err.Error(), "config struct is nil")
 		}
 	})
+}
+
+func Test_ErrorHandling(t *testing.T) {
+
 }
