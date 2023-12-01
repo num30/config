@@ -221,6 +221,10 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	return nil
 }
 
+func convertToEnvName(fullPath string) string {
+	return strings.ToUpper(strings.ReplaceAll(fullPath, ".", "_"))
+}
+
 type flagInfo struct {
 	Name       string
 	Type       reflect.Type

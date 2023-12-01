@@ -408,3 +408,46 @@ func Test_InputStructErrors(t *testing.T) {
 		}
 	})
 }
+
+func Test_Map(t *testing.T) {
+	type MapConf struct {
+		MapWithAttribute map[string]string `flag:"testmap" envvar:"ENV_TEST_MAP"`
+		Testmap          map[string]string
+	}
+
+	resetFlags()
+	expectedMap := map[string]string{"a": "1", "b": "2"}
+
+	t.Run("envVar", func(t *testing.T) {
+		cfg := MapConf{}
+		os.Setenv("TESTMAP_A", "1")
+		os.Setenv("TESTMAP_C", "3")
+		defer os.Unsetenv("TESTMAP_A")
+		defer os.Unsetenv("TESTMAP_C")
+
+		reader := NewConfReader("map-vars")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, expectedMap, cfg.Testmap)
+		}
+	})
+
+	t.Run("file", func(t *testing.T) {
+		cfg := MapConf{}
+		reader := NewConfReader("map").WithSearchDirs("testdata")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, expectedMap, cfg.MapWithAttribute)
+		}
+	})
+
+	t.Run("cmdArgs", func(t *testing.T) {
+		cfg := MapConf{}
+		os.Args = []string{"myapp", "--testmap", "a:1", "--testmap", "b:2", "--testmap", "c:3"}
+		reader := NewConfReader("map-args")
+		err := reader.Read(&cfg)
+		if assert.NoError(t, err) {
+			assert.Equal(t, expectedMap, cfg.TestMap)
+		}
+	})
+}
