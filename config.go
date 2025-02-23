@@ -78,7 +78,7 @@ func (c *ConfReader) Read(configStruct interface{}) error {
 
 	c.viper.SetConfigFile(c.configName)
 
-	if c.configDirs == nil || len(c.configDirs) == 0 {
+	if len(c.configDirs) == 0 {
 		// Find home directory.
 		home, err := os.UserHomeDir()
 		if err != nil {
