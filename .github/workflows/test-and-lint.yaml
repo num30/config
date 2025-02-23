@@ -17,13 +17,15 @@ jobs:
     - name: Test
       run:  go test -v ./... -coverprofile="coverage.out"
 
-    - uses: codecov/codecov-action@v2
+    - uses: codecov/codecov-action@v5
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.out
         flags: unittests # optional
         name: go-cache
         fail_ci_if_error: true # optional (default = false)
         verbose: false # optional (default = false)
+
 
   lint:
     name: lint
