@@ -24,7 +24,7 @@ import (
 
 type Config struct {
 	DB        Database `default:{}`
-	DebugMode bool     `flag:"debug"`
+	DebugMode bool     `flag:"debug" usage:"enable verbose debug logging"`
 }
 
 type Database struct {

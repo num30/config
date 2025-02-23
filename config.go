@@ -131,54 +131,54 @@ func (c *ConfReader) flagsBinding(conf interface{}) error {
 	for _, v := range tagsInfo {
 		switch v.Type.Kind() {
 		case reflect.String:
-			flags.String(v.Name, v.DefaultVal, "")
+			flags.String(v.Name, v.DefaultVal, v.Usage)
 
 		case reflect.Bool:
-			flags.Bool(v.Name, false, "")
+			flags.Bool(v.Name, false, v.Usage)
 
 		case reflect.Float32:
-			flags.Float32(v.Name, 0, "")
+			flags.Float32(v.Name, 0, v.Usage)
 
 		case reflect.Float64:
-			flags.Float64(v.Name, 0, "")
+			flags.Float64(v.Name, 0, v.Usage)
 
 		case reflect.Int:
-			flags.Int(v.Name, 0, "")
+			flags.Int(v.Name, 0, v.Usage)
 
 		case reflect.Int16:
-			flags.Int16(v.Name, 0, "")
+			flags.Int16(v.Name, 0, v.Usage)
 
 		case reflect.Int32:
-			flags.Int(v.Name, 0, "")
+			flags.Int(v.Name, 0, v.Usage)
 
 		case reflect.Int64:
 			if v.Type.String() == "time.Duration" {
-				flags.Duration(v.Name, 0, "")
+				flags.Duration(v.Name, 0, v.Usage)
 			} else {
-				flags.Int64(v.Name, 0, "")
+				flags.Int64(v.Name, 0, v.Usage)
 			}
 
 		case reflect.Int8:
-			flags.Int8(v.Name, 0, "")
+			flags.Int8(v.Name, 0, v.Usage)
 
 		case reflect.Uint:
-			flags.Uint(v.Name, 0, "")
+			flags.Uint(v.Name, 0, v.Usage)
 		case reflect.Uint32:
-			flags.Uint(v.Name, 0, "")
+			flags.Uint(v.Name, 0, v.Usage)
 
 		case reflect.Uint64:
-			flags.Uint64P(v.Name, "", 0, "")
+			flags.Uint64P(v.Name, v.Usage, 0, v.Usage)
 
 		case reflect.Uint8:
-			flags.Uint8(v.Name, 0, "")
+			flags.Uint8(v.Name, 0, v.Usage)
 
 		case reflect.Uint16:
-			flags.Uint16(v.Name, 0, "")
+			flags.Uint16(v.Name, 0, v.Usage)
 
 		case reflect.Slice:
 			switch v.Type.String() {
 			case "[]string":
-				flags.StringSlice(v.Name, []string{}, "")
+				flags.StringSlice(v.Name, []string{}, v.Usage)
 			case "[]uint8":
 				flags.BytesBase64(v.Name, []byte{}, "byte array in base64")
 			}
@@ -228,6 +228,7 @@ type flagInfo struct {
 	Type       reflect.Type
 	DefaultVal string
 	EnvVar     string
+	Usage      string
 }
 
 func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*flagInfo) map[string]*flagInfo {
@@ -254,6 +255,7 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 				// do we have flag name override ?
 				flagVal := f.Tag.Get("flag")
 				envVar := f.Tag.Get("envvar")
+				usage := f.Tag.Get("usage")
 
 				fieldPath := strings.TrimPrefix(strings.ToLower(path+"."+f.Name), ".")
 				if flagVal != "" {
@@ -262,6 +264,7 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 						Type:       f.Type,
 						DefaultVal: f.Tag.Get("default"),
 						EnvVar:     envVar,
+						Usage:      usage,
 					}
 				} else {
 					res[fieldPath] = &flagInfo{
@@ -269,6 +272,7 @@ func (c *ConfReader) dumpStruct(t reflect.Type, path string, res map[string]*fla
 						Type:       f.Type,
 						DefaultVal: f.Tag.Get("default"),
 						EnvVar:     envVar,
+						Usage:      usage,
 					}
 				}
 
